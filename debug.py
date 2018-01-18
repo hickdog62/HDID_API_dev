@@ -6,6 +6,8 @@
 ##     Todo:
 ##          01/15: maybe make the env_var a base for <env_var>_LEVELS and <env_var>_DEF_FN
 ##                 and/or maybe <env_var>_LOGFILE
+##          01/16: maybe allow an autoindent setting so the messages for each level would be 
+##                 automatically indented.
 ##          
 ##
 import os
@@ -13,6 +15,7 @@ import re
 import json
 import sys
 import time
+from time import strftime
 
 class debug:
   
@@ -20,7 +23,7 @@ class debug:
     #
     # the ubiquitous init function
     #   prog_ref is the name of the calling program
-    #   env_var is an environmrnt variable that has debug level settings
+    #   env_var is an environment variable that has debug level settings
     #   def_fn is a the path of a file that contains debug level settings
     #   logfile is an output file for log messages
     #   logging indicates if logging is on or off
@@ -33,8 +36,11 @@ class debug:
         self.logging = do_logging
         self.log_fn = logfile
         self.eval = eval
+        self.indent_space=0
+        self.date_fmt = "MDY"
         self.set_debug(def_fn, env_var, logfile)
         self.active = 0
+    
     
     def set_debug(self,def_fn,env_var,logfile):
          #
@@ -67,10 +73,12 @@ class debug:
          for spec in json_nodes['debug_spec']:
              if spec['prog_name'] == self.prog_name:
                  self.levels = spec['levels']
-                 self.printing = spec['printing']
-                 self.logging = spec['logging']
+                 self.printing = int(spec['printing'])
+                 self.logging = int(spec['logging'])
                  self.log_fn = spec['log_file']
                  self.eval = spec['eval']
+                 self.indent_space = int(spec['indent_space'])
+                 self.date_fmt = spec["date_fmt"]
          
          self.levels = self.levels.replace('"','')
          self.levels = re.sub('[,| ]',':',self.levels)
@@ -105,12 +113,13 @@ class debug:
         print ("prog_name: " + self.prog_name)
         print ("log_fn: " + self.log_fn)
         print ("Levels: " + self.levels)
-        print ("logging: " + self.logging)
-        print ("printing: " + self.printing)
+        print ("logging: " + str(self.logging))
+        print ("printing: " + str(self.printing))
         print ("def_fn: " + self.def_fn)
         print ("env_var: " + self.env_var)
         print ("eval: " + self.eval)
-
+        print ("indent_space: " + str(self.indent_space))
+        print ("date_fmt" + self.date_fmt)
 
     #
     # Evaluates a major/minor debug level pair to see if debug 
@@ -154,14 +163,22 @@ class debug:
 
     def debug(self, maj, min, msg):
         if self.debug_level_ok(maj, min):
-            time_str = time.asctime()
+            ltime = time.localtime()
+            if self.date_fmt == "MDY":
+                time_str = strftime("%m/%d/%Y %H:%M")
+                
+            if self.date_fmt == "YMD":
+                time_str = strftime("%Y-%m-%d %H:%M")                
+           # time_str = time.asctime()
+            n_pad = min*self.indent_space
+            print ("n_pad =" + str(n_pad))
             if self.printing:
-                print(time_str +": " + self.prog_name + "[" + str(os.getpid()) + "] (" + str(maj) + "," + str(min) + ")" + msg)
+                print(time_str +": " + self.prog_name + "[" + str(os.getpid()) + "] (" + str(maj) + "," + str(min) + ")" + msg.rjust(n_pad+len(msg)))
             
             if self.logging:
                 self.logfile.seek(0,2)
-                self.logfile.write(time_str +": " + self.prog_name + "[" + str(os.getpid()) + "] (" + str(maj) + "," + str(min) + ")" + msg)
-                
+                self.logfile.write(time_str +": " + self.prog_name + "[" + str(os.getpid()) + "] (" + str(maj) + "," + str(min) + ")" + msg.rjust(n_pad+len(msg)))
+ #               #msg.rjust(n_pad+len(msg))
                 
       
     

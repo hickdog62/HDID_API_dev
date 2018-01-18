@@ -1,0 +1,23 @@
+{
+    "debug_spec": [
+	{
+        "prog_name": "success_rate_graph.py",
+	    "levels": "0.3,1.5,2.5",
+	    "printing": "1",
+	    "logging": "1",
+	    "log_file": "out.txt",
+	    "eval": "le",
+	    "indent_space":"2",
+	    "date_fmt":"YMD"
+	},
+	{
+            "prog_name": "sone_other_prog.py",
+	    "levels": "main.5,output.5,layout.5",
+	    "printing": "1",
+	    "logging": "1",
+	    "log_file": "out.txt"
+	}
+   ]
+    
+}
+
